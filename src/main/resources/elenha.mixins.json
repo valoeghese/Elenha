@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "valoeghese.elenha.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "server": [
+    "MixinGeneratorOptions"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
