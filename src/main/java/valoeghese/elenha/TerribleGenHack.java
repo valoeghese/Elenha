@@ -57,39 +57,39 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	public TerribleGenHack(ChunkRegion region) {
 		super(region.toServerWorld(), ImmutableList.of(new EmptyChunk(region.toServerWorld(), region.getCenterPos())),
 				ChunkStatus.FEATURES, -1);
-		this.region = region;
+		this.parentRegion = region;
 	}
 
-	private final ChunkRegion region;
+	private final ChunkRegion parentRegion;
 	private Set<BlockPos> NOT_HACKED = new HashSet<>();
 
 	public ChunkPos getCenterPos() {
-		return this.region.getCenterPos();
+		return this.parentRegion.getCenterPos();
 	}
 
 	public void method_36972(@Nullable Supplier<String> supplier) {
-		this.region.method_36972(supplier);
+		this.parentRegion.method_36972(supplier);
 	}
 
 	public Chunk getChunk(int chunkX, int chunkZ) {
-		return this.region.getChunk(chunkX, chunkZ);
+		return this.parentRegion.getChunk(chunkX, chunkZ);
 	}
 
 	@Nullable
 	public Chunk getChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
-		return this.region.getChunk(chunkX, chunkZ, leastStatus, create);
+		return this.parentRegion.getChunk(chunkX, chunkZ, leastStatus, create);
 	}
 
 	public boolean isChunkLoaded(int chunkX, int chunkZ) {
-		/* 138 */     return this.region.isChunkLoaded(chunkX, chunkZ);
+		/* 138 */     return this.parentRegion.isChunkLoaded(chunkX, chunkZ);
 	}
 
 	// MODIFIED
 	public BlockState getBlockState(BlockPos pos) {
 		if (NOT_HACKED.contains(pos)) {
-			return this.region.getBlockState(pos);
+			return this.parentRegion.getBlockState(pos);
 		} else {
-			Biome biome = this.region.getBiome(pos);
+			Biome biome = this.parentRegion.getBiome(pos);
 			int y = pos.getY();
 			int height = biome.getCategory() == Biome.Category.OCEAN ? 40 : 64;
 			return y < height ?
@@ -101,9 +101,9 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	// MODIFIED
 	public FluidState getFluidState(BlockPos pos) {
 		if (NOT_HACKED.contains(pos)) {
-			return this.region.getFluidState(pos);
+			return this.parentRegion.getFluidState(pos);
 		} else {
-			Biome biome = this.region.getBiome(pos);
+			Biome biome = this.parentRegion.getBiome(pos);
 			int y = pos.getY();
 			int height = biome.getCategory() == Biome.Category.OCEAN ? 40 : 64;
 			return y < height ?
@@ -122,11 +122,11 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	}
 
 	public BiomeAccess getBiomeAccess() {
-		/* 159 */       return this.region.getBiomeAccess();
+		/* 159 */       return this.parentRegion.getBiomeAccess();
 	}
 
 	public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
-		/* 163 */       return this.region.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
+		/* 163 */       return this.parentRegion.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
 	}
 
 	public float getBrightness(Direction direction, boolean shaded) {
@@ -134,27 +134,27 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	}
 
 	public LightingProvider getLightingProvider() {
-		/* 171 */       return this.region.getLightingProvider();
+		/* 171 */       return this.parentRegion.getLightingProvider();
 	}
 
 	public boolean breakBlock(BlockPos pos, boolean drop, @Nullable Entity breakingEntity, int maxUpdateDepth) {
-		boolean result = this.region.breakBlock(pos, drop, breakingEntity, maxUpdateDepth);
+		boolean result = this.parentRegion.breakBlock(pos, drop, breakingEntity, maxUpdateDepth);
 		if (result) NOT_HACKED.add(pos);
 		return result;
 	}
 
 	@Nullable
 	public BlockEntity getBlockEntity(BlockPos pos) {
-		return this.region.getBlockEntity(pos);
+		return this.parentRegion.getBlockEntity(pos);
 	}
 
 	public boolean method_37368(BlockPos blockPos) {
-		return this.region.method_37368(blockPos);
+		return this.parentRegion.method_37368(blockPos);
 	}
 
 	// MODIFIED
 	public boolean setBlockState(BlockPos pos, BlockState state, int flags, int maxUpdateDepth) {
-		if (this.region.setBlockState(pos, state, flags, maxUpdateDepth)) {
+		if (this.parentRegion.setBlockState(pos, state, flags, maxUpdateDepth)) {
 			NOT_HACKED.add(pos);
 			return true;
 		} else {
@@ -163,71 +163,72 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	}
 
 	public boolean spawnEntity(Entity entity) {
-		return this.region.spawnEntity(entity);
+		return this.parentRegion.spawnEntity(entity);
 	}
 
 	public boolean removeBlock(BlockPos pos, boolean move) {
-		boolean result = this.region.removeBlock(pos, move);
+		boolean result = this.parentRegion.removeBlock(pos, move);
 		if (result) NOT_HACKED.add(pos);
 		return result;
 	}
 
 	public WorldBorder getWorldBorder() {
-		/* 289 */       return this.region.getWorldBorder();
+		/* 289 */       return this.parentRegion.getWorldBorder();
 	}
 
 	public boolean isClient() {
 		/* 293 */       return false;
 	}
 
+	// MODIFIED to fix hack
 	@Deprecated
 	public ServerWorld toServerWorld() {
-		/* 298 */       return this.region.toServerWorld();
+		return this.parentRegion == null ? null : this.parentRegion.toServerWorld();
 	}
 
 	public DynamicRegistryManager getRegistryManager() {
-		/* 302 */       return this.region.getRegistryManager();
+		/* 302 */       return this.parentRegion.getRegistryManager();
 	}
 
 	public WorldProperties getLevelProperties() {
-		/* 306 */       return this.region.getLevelProperties();
+		/* 306 */       return this.parentRegion.getLevelProperties();
 	}
 
 	public LocalDifficulty getLocalDifficulty(BlockPos pos) {
-		return this.region.getLocalDifficulty(pos);
+		return this.parentRegion.getLocalDifficulty(pos);
 	}
 
 	@Nullable
 	public MinecraftServer getServer() {
-		/* 319 */       return this.region.getServer();
+		/* 319 */       return this.parentRegion.getServer();
 	}
 
 	public ChunkManager getChunkManager() {
-		/* 323 */       return this.region.getChunkManager();
+		/* 323 */       return this.parentRegion.getChunkManager();
 	}
 
 	public long getSeed() {
-		/* 327 */       return this.region.getSeed();
+		/* 327 */       return this.parentRegion.getSeed();
 	}
 
 	public TickScheduler<Block> getBlockTickScheduler() {
-		/* 331 */       return this.region.getBlockTickScheduler();
+		/* 331 */       return this.parentRegion.getBlockTickScheduler();
 	}
 
 	public TickScheduler<Fluid> getFluidTickScheduler() {
-		/* 335 */       return this.region.getFluidTickScheduler();
+		/* 335 */       return this.parentRegion.getFluidTickScheduler();
 	}
 
 	public int getSeaLevel() {
-		/* 339 */       return this.region.getSeaLevel();
+		/* 339 */       return this.parentRegion.getSeaLevel();
 	}
 
 	public Random getRandom() {
-		/* 343 */       return this.region.getRandom();
+		/* 343 */       return this.parentRegion.getRandom();
 	}
 
 	public int getTopY(Type heightmap, int x, int z) {
-		/* 347 */       return this.region.getTopY();
+		/* 347 */       return this.parentRegion.getTopY();
 	}
 
 	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
@@ -243,7 +244,7 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	/* 360 */    }
 
 	public DimensionType getDimension() {
-		/* 363 */       return this.region.getDimension();
+		/* 363 */       return this.parentRegion.getDimension();
 	}
 
 	public boolean testBlockState(BlockPos pos, Predicate<BlockState> state) {
@@ -251,7 +252,7 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	}
 
 	public boolean testFluidState(BlockPos pos, Predicate<FluidState> state) {
-		/* 371 */       return state.test(this.region.getFluidState(pos));
+		/* 371 */       return state.test(this.parentRegion.getFluidState(pos));
 	}
 
 	public <T extends Entity> List<T> getEntitiesByType(TypeFilter<Entity, T> filter, Box box, Predicate<? super T> predicate) {
@@ -267,14 +268,14 @@ public class TerribleGenHack extends ChunkRegion implements StructureWorldAccess
 	}
 
 	public Stream<? extends StructureStart<?>> getStructures(ChunkSectionPos pos, StructureFeature<?> feature) {
-		/* 387 */       return this.region.getStructures(pos, feature);
+		/* 387 */       return this.parentRegion.getStructures(pos, feature);
 	}
 
 	public int getBottomY() {
-		/* 391 */       return this.region.getBottomY();
+		/* 391 */       return this.parentRegion.getBottomY();
 	}
 
 	public int getHeight() {
-		/* 395 */       return this.region.getHeight();
+		/* 395 */       return this.parentRegion.getHeight();
 	}
 }

@@ -3,6 +3,7 @@
   "package": "valoeghese.elenha.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "UnjustifiedMixin"
   ],
   "client": [
   ],
