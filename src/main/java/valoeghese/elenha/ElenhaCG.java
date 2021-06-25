@@ -9,14 +9,20 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.util.crash.CrashException;
+import net.minecraft.util.crash.CrashReport;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.Heightmap.Type;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStep.Carver;
+import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.StructuresConfig;
@@ -78,7 +84,21 @@ public class ElenhaCG extends ChunkGenerator {
 
 	@Override
 	public void generateFeatures(ChunkRegion region, StructureAccessor accessor) {
-		super.generateFeatures(new TerribleGenHack(region), accessor);
+		ChunkPos chunkPos = region.getCenterPos();
+		int i = chunkPos.getStartX();
+		int j = chunkPos.getStartZ();
+		BlockPos blockPos = new BlockPos(i, region.getBottomY(), j);
+		Biome biome = this.populationSource.getBiomeForNoiseGen(chunkPos);
+		ChunkRandom chunkRandom = new ChunkRandom();
+		long l = chunkRandom.setPopulationSeed(region.getSeed(), i, j);
+
+		try {
+			biome.generateFeatureStep(accessor, this, region, l, chunkRandom, blockPos);
+		} catch (Exception var13) {
+			CrashReport crashReport = CrashReport.create(var13, "Biome decoration");
+			crashReport.addElement("Generation").add("CenterX", chunkPos.x).add("CenterZ", chunkPos.z).add("Seed", l).add("Biome", biome);
+			throw new CrashException(crashReport);
+		}
 	}
 
 	@Override
