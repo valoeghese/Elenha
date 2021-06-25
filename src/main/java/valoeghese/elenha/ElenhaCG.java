@@ -9,20 +9,14 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.CrashReport;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.Heightmap.Type;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStep.Carver;
-import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.StructuresConfig;
@@ -34,16 +28,16 @@ public class ElenhaCG extends ChunkGenerator {
 		this.seed = worldSeed;
 	}
 
-	private final long seed;
+	protected final long seed;
 
 	public static final Codec<ElenhaCG> CODEC = RecordCodecBuilder.create(
 			i -> i.group(
 					BiomeSource.CODEC.fieldOf("biome_source")
-					.forGetter(ElenhaCG::getBiomeSource),
+						.forGetter(ElenhaCG::getBiomeSource),
 					Codec.LONG.fieldOf("seed").stable()
-					.forGetter(cg -> cg.seed),
+						.forGetter(cg -> cg.seed),
 					StructuresConfig.CODEC.fieldOf("structures")
-					.forGetter(ElenhaCG::getStructuresConfig))
+						.forGetter(ElenhaCG::getStructuresConfig))
 			.apply(i, i.stable(ElenhaCG::new))
 			);
 
@@ -80,25 +74,6 @@ public class ElenhaCG extends ChunkGenerator {
 	@Override
 	public int getHeight(int x, int z, Type heightmap, HeightLimitView world) {
 		return 64;
-	}
-
-	@Override
-	public void generateFeatures(ChunkRegion region, StructureAccessor accessor) {
-		ChunkPos chunkPos = region.getCenterPos();
-		int i = chunkPos.getStartX();
-		int j = chunkPos.getStartZ();
-		BlockPos blockPos = new BlockPos(i, region.getBottomY(), j);
-		Biome biome = this.populationSource.getBiomeForNoiseGen(chunkPos);
-		ChunkRandom chunkRandom = new ChunkRandom();
-		long l = chunkRandom.setPopulationSeed(region.getSeed(), i, j);
-
-		try {
-			biome.generateFeatureStep(accessor, this, region, l, chunkRandom, blockPos);
-		} catch (Exception var13) {
-			CrashReport crashReport = CrashReport.create(var13, "Biome decoration");
-			crashReport.addElement("Generation").add("CenterX", chunkPos.x).add("CenterZ", chunkPos.z).add("Seed", l).add("Biome", biome);
-			throw new CrashException(crashReport);
-		}
 	}
 
 	@Override

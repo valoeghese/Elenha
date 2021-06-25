@@ -20,16 +20,22 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.GeneratorOptions;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import valoeghese.elenha.ElenhaCG;
+import valoeghese.elenha.HackCG;
+import valoeghese.elenha.Elenha.ChunkGenFactory;
 
 @Mixin(GeneratorOptions.class)
 public abstract class MixinGeneratorOptions {
+	private static final int MAGIC_CONSTANT = "elenhax".length();
+
 	@Inject(at = @At("HEAD"), method = "fromProperties", cancellable = true)
 	private static void onFromProperties(DynamicRegistryManager dynamicRegistryManager, Properties properties, CallbackInfoReturnable<GeneratorOptions> info) {
 		Object levelType = properties.get("level-type");
 
 		// Ecotones has a null check so probably a good idea for me to as well
 		if (levelType != null) {
-			if (levelType.toString().trim().toLowerCase().equals("elenha")) {
+			String wt = levelType.toString().trim().toLowerCase();
+
+			if (wt.equals("elenha") || wt.equals("elenhax")) {
 				// seed shenanigans
 				String levelSeed = (String) MoreObjects.firstNonNull(properties.get("level-seed"), "");
 
@@ -58,6 +64,8 @@ public abstract class MixinGeneratorOptions {
 				Registry<ChunkGeneratorSettings> settingsReg = dynamicRegistryManager.get(Registry.CHUNK_GENERATOR_SETTINGS_KEY);
 				SimpleRegistry<DimensionOptions> dimensionOptions = DimensionType.createDefaultDimensionOptions(dimReg, biomeReg, settingsReg, actualSeed);
 
+				ChunkGenFactory generator = wt.length() == MAGIC_CONSTANT ? HackCG::new : ElenhaCG::new;
+
 				// return our chunk generator
 				info.setReturnValue(new GeneratorOptions(
 						actualSeed,
@@ -66,7 +74,7 @@ public abstract class MixinGeneratorOptions {
 						GeneratorOptions.getRegistryWithReplacedOverworldGenerator(
 								dimReg,
 								dimensionOptions,
-								new ElenhaCG(
+								generator.create(
 										new VanillaLayeredBiomeSource(actualSeed, false, false, biomeReg),
 										actualSeed, settingsReg.getOrThrow(ChunkGeneratorSettings.OVERWORLD).getStructuresConfig()))));
 			}
